@@ -51,7 +51,7 @@ def draw_points(img, points):
     return img
 
 def draw_box(img, box):
-    return cv2.rectangle(img, box[0], box[-1], 0, 1)
+    return cv2.rectangle(img, box[0], box[-1], (0, 255, 0), 1)
 
 
 class BezierCurveGenerator(object):
@@ -72,6 +72,8 @@ class BezierCurveGenerator(object):
             canvas = np.ones((self.height, self.width), dtype='uint8')
             canvas *= 255
             canvas = draw_points(canvas, curve_points)
+            canvas = canvas[:, :, np.newaxis]
+            canvas = np.concatenate([canvas] * 3, axis=2)
             curve_points = np.array(curve_points)
             x_min, y_min = curve_points.min(axis=0)
             x_max, y_max = curve_points.max(axis=0)
@@ -86,10 +88,20 @@ class BezierCurveGenerator(object):
 if __name__ == "__main__":
     #points = [(0, 0), (224,224)]
     beziercurve = BezierCurveGenerator()
+    shows = []
     for data in beziercurve:
         img = data['img']
         box = data['box']
-        print(box)
         img = draw_box(img, box)
-        cv2.imshow("show", img)
-        cv2.waitKey(0)
+        shows.append(img)
+        if len(shows) == 64:
+            rows = []
+            for i in range(8):
+                rows.append(np.concatenate(shows[i*8:(i+1)*8], axis=1))
+            show = np.concatenate(rows, axis=0)
+            cv2.imshow('show', show)
+            cv2.waitKey(0)
+            shows = []
+
+
+
